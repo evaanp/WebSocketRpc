@@ -4,9 +4,12 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using EP94.WebSocketRpc.Internal.Shared;
+using EP94.WebSocketRpc.Internal.Shared.Models;
+using EP94.WebSocketRpc.Internal.Shared.Models.Responses;
 using EP94.WebSocketRpc.Internal.WebSocketRpcClient.Models;
-using EP94.WebSocketRpc.Internal.WebSocketRpcServer.Models;
-using EP94.WebSocketRpc.Internal.WebSocketRpcServer.Models.Responses;
+using EP94.WebSocketRpc.Public.Shared;
+using EP94.WebSocketRpc.Public.Shared.Models;
+using EP94.WebSocketRpc.Public.Shared.Models.Responses;
 using Newtonsoft.Json;
 using WebSocketSharp;
 
@@ -30,6 +33,10 @@ namespace EP94.WebSocketRpc.Public
             Task<JsonRpcResponse> subscription = SubscribeToResponse(message.Id);
             webSocket.Send(message.ToJson());
             var result = await subscription;
+            if (result.Error != null)
+            {
+                throw new Exception(result.Error.Value.Message);
+            }
             return (T)Convert.ChangeType(result.Result, typeof(T));
         }
 
@@ -39,6 +46,10 @@ namespace EP94.WebSocketRpc.Public
             Task<JsonRpcResponse> subscription = SubscribeToResponse(message.Id);
             webSocket.Send(message.ToJson());
             var result = await subscription;
+            if (result.Error != null)
+            {
+                throw new Exception(result.Error.Value.Message);
+            }
             return (string)result.Result == "OK";
         }
 
@@ -57,10 +68,7 @@ namespace EP94.WebSocketRpc.Public
                     }
                 }
             }
-            catch (Exception)
-            {
-
-            }
+            catch (Exception) { }
         }
 
         private async Task<JsonRpcResponse> SubscribeToResponse(long id)

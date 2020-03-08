@@ -2,9 +2,10 @@
 using System.Collections.Generic;
 using System.Text;
 using EP94.WebSocketRpc.Internal.Shared;
-using EP94.WebSocketRpc.Internal.WebSocketRpcServer;
-using EP94.WebSocketRpc.Internal.WebSocketRpcServer.Interfaces;
-using EP94.WebSocketRpc.Internal.WebSocketRpcServer.Models;
+using EP94.WebSocketRpc.Internal.Shared.Interfaces;
+using EP94.WebSocketRpc.Internal.Shared.Models;
+using EP94.WebSocketRpc.Public.Shared;
+using EP94.WebSocketRpc.Public.Shared.Models;
 using WebSocketSharp.Server;
 
 namespace EP94.WebsocketRpc.Public

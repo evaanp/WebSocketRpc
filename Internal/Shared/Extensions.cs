@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using EP94.WebSocketRpc.Internal.WebSocketRpcServer.Models;
-using EP94.WebSocketRpc.Internal.WebSocketRpcServer.Models.Responses;
+using EP94.WebSocketRpc.Internal.Shared.Models;
+using EP94.WebSocketRpc.Internal.Shared.Models.Responses;
+using EP94.WebSocketRpc.Public.Shared.Models;
+using EP94.WebSocketRpc.Public.Shared.Models.Responses;
 using Newtonsoft.Json;
 
 namespace EP94.WebSocketRpc.Internal.Shared

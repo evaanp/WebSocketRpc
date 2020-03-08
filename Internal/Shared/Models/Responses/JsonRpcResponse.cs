@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using Newtonsoft.Json;
 
-namespace EP94.WebSocketRpc.Internal.WebSocketRpcServer.Models.Responses
+namespace EP94.WebSocketRpc.Internal.Shared.Models.Responses
 {
     internal class JsonRpcResponse
     {
@@ -15,7 +15,7 @@ namespace EP94.WebSocketRpc.Internal.WebSocketRpcServer.Models.Responses
 
         public JsonRpcResponse() { }
 
-        public JsonRpcResponse(long id, JsonRpcError error)
+        public JsonRpcResponse(long id, JsonRpcError error) 
         {
             Id = id;
             Error = error;

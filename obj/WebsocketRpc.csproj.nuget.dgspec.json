@@ -43,6 +43,10 @@
       "frameworks": {
         "netstandard2.0": {
           "dependencies": {
+            "Microsoft.CSharp": {
+              "target": "Package",
+              "version": "[4.7.0, )"
+            },
             "NETStandard.Library": {
               "suppressParent": "All",
               "target": "Package",
@@ -51,7 +55,7 @@
             },
             "Newtonsoft.Json": {
               "target": "Package",
-              "version": "[12.0.2, )"
+              "version": "[12.0.3, )"
             },
             "Serilog": {
               "target": "Package",

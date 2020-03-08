@@ -2,7 +2,8 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
-using EP94.WebSocketRpc.Internal.WebSocketRpcServer.Models.Responses;
+using EP94.WebSocketRpc.Internal.Shared.Models.Responses;
+using EP94.WebSocketRpc.Public.Shared.Models.Responses;
 
 namespace EP94.WebSocketRpc.Internal.WebSocketRpcClient.Models
 {

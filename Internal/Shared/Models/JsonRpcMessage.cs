@@ -4,7 +4,7 @@ using System.Text;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace EP94.WebSocketRpc.Internal.WebSocketRpcServer.Models
+namespace EP94.WebSocketRpc.Internal.Shared.Models
 {
     internal class JsonRpcMessage
     {
