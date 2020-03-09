@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Net;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -19,21 +20,67 @@ namespace EP94.WebSocketRpc.Public
     {
         private WebSocket webSocket;
         private List<Subscription> subscriptions = new List<Subscription>();
-        public WebSocketRpcClient()
+        private ManualResetEvent resetEvent;
+        private delegate void Error(string error);
+        private Error OnError;
+        private bool connected = false;
+        public WebSocketRpcClient(IPAddress iPAddress, int port, bool secure)
         {
-            webSocket = new WebSocket("ws://localhost:8080");
-            webSocket.Connect();
+            string protocol = secure ? "wss" : "ws";
+
+            webSocket = new WebSocket($"{protocol}://{iPAddress.ToString()}:{port}");
+
             webSocket.Log.Output = (data, error) =>
             {
-                
+                OnError?.Invoke(error);
             };
             
             webSocket.OnMessage += (sender, e) => ReceiveMessages(e.Data);
-            webSocket.OnClose += (sender, e) => webSocket.Connect();
+            webSocket.OnClose += (sender, e) =>
+            {
+                connected = false;
+                Connect();
+            };
+            webSocket.OnOpen += (sender, e) =>
+            {
+                connected = true;
+                if (resetEvent != null)
+                {
+                    resetEvent.Set();
+                }
+            };
+        }
+
+        public bool Connect()
+        {
+            CancellationTokenSource cancellationTokenSource = new CancellationTokenSource(2000);
+            resetEvent = new ManualResetEvent(false);
+            
+            var task = Task.Run(() =>
+            {
+                webSocket.Connect();
+            }, cancellationTokenSource.Token);
+
+            while (resetEvent != null && !resetEvent.WaitOne(1) && !cancellationTokenSource.Token.IsCancellationRequested)
+            {
+                Thread.Sleep(1);
+            }
+
+            if (cancellationTokenSource.IsCancellationRequested)
+                Console.WriteLine("Connection timed out");
+
+            cancellationTokenSource.Dispose();
+
+            if (resetEvent != null)
+                resetEvent.Dispose();
+            resetEvent = null;
+            return connected;
         }
 
         public async Task<T> Call<T>(string method, params object[] parameters)
         {
+            if (!connected)
+                throw new Exception("Not connected");
             CancellationTokenSource cancellationTokenSource = new CancellationTokenSource(2000);
             JsonRpcMessage message = new JsonRpcMessage(method, parameters);
             Task<JsonRpcResponse> subscription = SubscribeToResponse(message.Id);
@@ -49,6 +96,8 @@ namespace EP94.WebSocketRpc.Public
 
         public async Task<bool> Call(string method, params object[] parameters)
         {
+            if (!connected)
+                throw new Exception("Not connected");
             JsonRpcMessage message = new JsonRpcMessage(method, parameters);
             Task<JsonRpcResponse> subscription = SubscribeToResponse(message.Id);
             webSocket.Send(message.ToJson());

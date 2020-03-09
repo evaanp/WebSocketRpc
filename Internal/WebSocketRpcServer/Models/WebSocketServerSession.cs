@@ -67,8 +67,8 @@ namespace EP94.WebSocketRpc.Internal.Shared.Models
 
         private async Task<object> TryCallMethod(JsonRpcMessage message)
         {
-            Type methodType = callable.GetType();
-            MethodInfo methodInfo = methodType.GetMethod(message.Method);
+            Type type = callable.GetType();
+            MethodInfo methodInfo = type.GetMethod(message.Method);
 
             if (methodInfo == null)
                 throw new MethodNotFoundException(message.Method);
