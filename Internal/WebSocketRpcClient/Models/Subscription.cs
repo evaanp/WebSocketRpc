@@ -12,6 +12,7 @@ namespace EP94.WebSocketRpc.Internal.WebSocketRpcClient.Models
         public long Id;
         public ManualResetEvent resetEvent = new ManualResetEvent(false);
         public JsonRpcResponse response;
+        public DateTime CreationDateTime = DateTime.UtcNow;
 
         public Subscription(long id)
         {

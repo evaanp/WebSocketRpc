@@ -23,15 +23,22 @@ namespace EP94.WebSocketRpc.Public
         {
             webSocket = new WebSocket("ws://localhost:8080");
             webSocket.Connect();
+            webSocket.Log.Output = (data, error) =>
+            {
+                
+            };
             
             webSocket.OnMessage += (sender, e) => ReceiveMessages(e.Data);
+            webSocket.OnClose += (sender, e) => webSocket.Connect();
         }
 
         public async Task<T> Call<T>(string method, params object[] parameters)
         {
+            CancellationTokenSource cancellationTokenSource = new CancellationTokenSource(2000);
             JsonRpcMessage message = new JsonRpcMessage(method, parameters);
             Task<JsonRpcResponse> subscription = SubscribeToResponse(message.Id);
             webSocket.Send(message.ToJson());
+            subscription.Wait(cancellationTokenSource.Token);
             var result = await subscription;
             if (result.Error != null)
             {
@@ -65,6 +72,10 @@ namespace EP94.WebSocketRpc.Public
                         subscriptions.Remove(subscription);
                         subscription.response = response;
                         subscription.resetEvent.Set();
+                    }
+                    if (subscription.CreationDateTime.AddSeconds(5) <= DateTime.UtcNow)
+                    {
+                        subscriptions.Remove(subscription);
                     }
                 }
             }

@@ -4,8 +4,10 @@ using System.Text;
 using EP94.WebSocketRpc.Internal.Shared;
 using EP94.WebSocketRpc.Internal.Shared.Interfaces;
 using EP94.WebSocketRpc.Internal.Shared.Models;
+using EP94.WebSocketRpc.Public.Models;
 using EP94.WebSocketRpc.Public.Shared;
 using EP94.WebSocketRpc.Public.Shared.Models;
+using Newtonsoft.Json;
 using WebSocketSharp.Server;
 
 namespace EP94.WebsocketRpc.Public
@@ -20,9 +22,15 @@ namespace EP94.WebsocketRpc.Public
             socket.Start();
         }
 
-        public void Broadcast(string message)
+        public void Broadcast(BroadcastMessage message)
         {
-            socket.WebSocketServices.Broadcast(message.GetBytes());
+            string jsonMessage = JsonConvert.SerializeObject(message);
+            socket.WebSocketServices.Broadcast(jsonMessage);
+        }
+
+        public void Stop()
+        {
+            socket.Stop();
         }
     }
 }
