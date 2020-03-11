@@ -9,8 +9,14 @@ namespace EP94.WebSocketRpc.Internal.Shared.Models.Responses
     {
         [JsonProperty("jsonrpc")]
         public readonly string JsonRpcVersion = "2.0";
+
+        [JsonProperty("id")]
         public long Id { get; set; }
+
+        [JsonProperty("error")]
         public JsonRpcError? Error { get; set; } = null;
+
+        [JsonProperty("result")]
         public object Result { get; set; } = null;
 
         public JsonRpcResponse() { }

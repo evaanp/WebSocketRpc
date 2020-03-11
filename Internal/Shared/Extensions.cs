@@ -37,7 +37,8 @@ namespace EP94.WebSocketRpc.Internal.Shared
                             Formatting.None,
                             new JsonSerializerSettings
                             {
-                                NullValueHandling = NullValueHandling.Ignore
+                                NullValueHandling = NullValueHandling.Ignore,
+                                StringEscapeHandling = StringEscapeHandling.Default                               
                             });
         }
     }

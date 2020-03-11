@@ -10,8 +10,11 @@ namespace EP94.WebSocketRpc.Internal.Shared.Models
     {
         [JsonProperty("jsonrpc")]
         public string JsonRpcVersion { get; set; } = "2.0";
+        [JsonProperty("method")]
         public string Method { get; set; }
+        [JsonProperty("params")]
         public object[] Params { get; set; }
+        [JsonProperty("id")]
         public long Id { get; set; }
         private static long _id;
 

@@ -1,4 +1,3 @@
-C:\Github_Projects\Libraries\WebsocketRpc\WebSocketRpc\obj\Debug\netstandard2.0\WebSocketRpc.csprojAssemblyReference.cache
 C:\Github_Projects\Libraries\WebsocketRpc\WebSocketRpc\obj\Debug\netstandard2.0\WebSocketRpc.AssemblyInfoInputs.cache
 C:\Github_Projects\Libraries\WebsocketRpc\WebSocketRpc\obj\Debug\netstandard2.0\WebSocketRpc.AssemblyInfo.cs
 C:\Github_Projects\Libraries\WebsocketRpc\WebSocketRpc\bin\Debug\netstandard2.0\WebSocketRpc.deps.json
@@ -6,3 +5,4 @@ C:\Github_Projects\Libraries\WebsocketRpc\WebSocketRpc\bin\Debug\netstandard2.0\
 C:\Github_Projects\Libraries\WebsocketRpc\WebSocketRpc\bin\Debug\netstandard2.0\WebSocketRpc.pdb
 C:\Github_Projects\Libraries\WebsocketRpc\WebSocketRpc\obj\Debug\netstandard2.0\WebSocketRpc.dll
 C:\Github_Projects\Libraries\WebsocketRpc\WebSocketRpc\obj\Debug\netstandard2.0\WebSocketRpc.pdb
+C:\Github_Projects\Libraries\WebsocketRpc\WebSocketRpc\obj\Debug\netstandard2.0\WebSocketRpc.csprojAssemblyReference.cache
