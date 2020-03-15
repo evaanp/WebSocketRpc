@@ -32,14 +32,11 @@ namespace EP94.WebSocketRpc.Public
         private bool connected = false;
         private IPAddress IPAddress;
         private object _lock = new object();
-        public WebSocketRpcClient(IPAddress iPAddress, int port, bool secure)
+        public WebSocketRpcClient(IPAddress iPAddress, int port, bool secure, ILogger logger)
         {
-            if (Log.Logger.GetType() != typeof(Logger))
-                Log.Logger = new LoggerConfiguration()
-                    .WriteTo.Console(outputTemplate: "{Timestamp:dd-MM-yyyy HH:mm:ss.fff} [{Level:u3}] {Message:lj}{NewLine}{Exception}")
-                    .CreateLogger();
+            Log.Logger = logger;
 
-            this.IPAddress = IPAddress;
+            this.IPAddress = iPAddress;
 
             string protocol = secure ? "wss" : "ws";
 
