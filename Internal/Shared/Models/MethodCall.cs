@@ -38,6 +38,19 @@ namespace EP94.WebSocketRpc.Internal.Shared.Models
             });
         }
 
+        public Task AwaitResponse()
+        {
+            return Task.Factory.StartNew(() =>
+            {
+                while (JsonRpcResponse == null)
+                {
+                    if (CancellationTokenSource.IsCancellationRequested)
+                        throw new Exception("JsonRpcTimeout");
+                    Task.Delay(1).Wait();
+                }
+            });
+        }
+
         public override int GetHashCode()
         {
             return JsonRpcMessage.Id.GetHashCode();

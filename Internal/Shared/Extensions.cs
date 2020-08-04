@@ -8,7 +8,6 @@ using EP94.WebSocketRpc.Internal.Shared.Models.Responses;
 using EP94.WebSocketRpc.Public.Shared.Models;
 using EP94.WebSocketRpc.Public.Shared.Models.Responses;
 using Newtonsoft.Json;
-using WebSocketSharp;
 
 namespace EP94.WebSocketRpc.Internal.Shared
 {
@@ -47,7 +46,7 @@ namespace EP94.WebSocketRpc.Internal.Shared
 
         public static string Encrypt(this string clearText, string encryptionKey)
         {
-            if (encryptionKey.IsNullOrEmpty())
+            if (string.IsNullOrEmpty(encryptionKey))
                 return clearText;
 
             byte[] clearBytes = Encoding.Unicode.GetBytes(clearText);
@@ -70,7 +69,7 @@ namespace EP94.WebSocketRpc.Internal.Shared
         }
         public static string Decrypt(this string cipherText, string encryptionKey)
         {
-            if (encryptionKey.IsNullOrEmpty())
+            if (string.IsNullOrEmpty(encryptionKey))
                 return cipherText;
 
             cipherText = cipherText.Replace(" ", "+");

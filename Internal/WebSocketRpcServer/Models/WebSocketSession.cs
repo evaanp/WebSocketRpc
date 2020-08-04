@@ -25,9 +25,9 @@ namespace EP94.WebSocketRpc.Internal.WebSocketRpcServer.Models
 
         private Thread _thread;
         private WebSocket _socket;
-        private WebSocketRpcServerV2 _server;
+        private Public.WebSocketRpcServer _server;
         private CancellationTokenSource _cts = new CancellationTokenSource();
-        public WebSocketSession(WebSocket socket, WebSocketRpcServerV2 server)
+        public WebSocketSession(WebSocket socket, Public.WebSocketRpcServer server)
         {
             _socket = socket;
             _server = server;

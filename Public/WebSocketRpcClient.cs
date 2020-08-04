@@ -1,181 +1,260 @@
-﻿//using System;
-//using System.Collections.Generic;
-//using System.Net;
-//using System.Text;
-//using System.Threading;
-//using System.Threading.Tasks;
-//using EP94.WebSocketRpc.Internal.Shared;
-//using EP94.WebSocketRpc.Internal.Shared.Models;
-//using EP94.WebSocketRpc.Internal.Shared.Models.Responses;
-//using EP94.WebSocketRpc.Internal.WebSocketRpcClient.Models;
-//using EP94.WebSocketRpc.Public.Models;
-//using EP94.WebSocketRpc.Public.Shared;
-//using EP94.WebSocketRpc.Public.Shared.Models;
-//using EP94.WebSocketRpc.Public.Shared.Models.Responses;
-//using Newtonsoft.Json;
-//using Serilog;
-//using Serilog.Events;
-//using WebSocketSharp;
+﻿using EP94.WebSocketRpc.Internal.Shared;
+using EP94.WebSocketRpc.Internal.Shared.Models;
+using EP94.WebSocketRpc.Internal.Shared.Models.Responses;
+using EP94.WebSocketRpc.Public.Models;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net;
+using System.Net.WebSockets;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 
-//namespace EP94.WebSocketRpc.Public
-//{
-    
-//    public class WebSocketRpcClient
-//    {
-//        public delegate void BroadcastMessageDelegate(BroadcastMessage broadcastMessage);
-//        public BroadcastMessageDelegate OnBroadcastMessage;
-//        private WebSocket webSocket;
-//        private List<Subscription> subscriptions = new List<Subscription>();
-//        private ManualResetEvent resetEvent;
-//        private delegate void Error(string error);
-//        private Error OnError;
-//        private bool connected = false;
-//        private IPAddress IPAddress;
-//        private object _lock = new object();
-//        public WebSocketRpcClient(IPAddress iPAddress, int port, bool secure, ILogger logger)
-//        {
-//            Log.Logger = logger;
+namespace EP94.WebSocketRpc.Public
+{
+    public class WebSocketRpcClient : IDisposable
+    {
+        public event EventHandler<bool> OnConnectionChange;
+        public event EventHandler<string> OnError;
+        public string IpAddress { get; private set; }
+        public int Port { get; private set; }
+        private string Password { get; set; }
+        public string UrlScheme { get; private set; }
 
-//            IPAddress = iPAddress;
+        public bool Connected 
+        {
+            get
+            {
+                return _connected;
+            }
+            private set
+            {
+                if (_connected != value)
+                {
+                    _connected = value;
+                    OnConnectionChange?.Invoke(this, value);
+                }
+            }
+        }
+        private bool _connected = false;
+        private bool _error = false;
 
-//            string protocol = secure ? "wss" : "ws";
+        private Dictionary<string, List<Action<JObject>>> _broadcastEventSubscriptions = new Dictionary<string, List<Action<JObject>>>(StringComparer.OrdinalIgnoreCase);
+        private LinkedList<MethodCall> _sendBuffer = new LinkedList<MethodCall>();
+        private HashSet<MethodCall> _methodCalls = new HashSet<MethodCall>();
+        private ClientWebSocket _client;
+        private object _clientLock = new object();
+        private Thread _receiveValuesThread;
+        private Thread _sendCallsThread;
+        private CancellationTokenSource _cts = new CancellationTokenSource();
+        private List<Action<BroadcastMessage>> _allSubscriptions = new List<Action<BroadcastMessage>>();
+        public WebSocketRpcClient(string ipAddress, int port, string password = "", bool secure = false)
+        {
+            IpAddress = ipAddress;
+            Port = port;
+            Password = password;
+            UrlScheme = secure ? "wss" : "ws";
+            _client = new ClientWebSocket();
+            _receiveValuesThread = new Thread(() => RecieveValues());
+            _sendCallsThread = new Thread(() => SendCalls());
+        }
+        public void Run()
+        {
+            Connect();
+            _receiveValuesThread.Start();
+            _sendCallsThread.Start();
+        }
 
-//            webSocket = new WebSocket($"{protocol}://{iPAddress}:{port}");
+        public TReturnValue Call<TReturnValue>(string method, params object[] parameters)
+        {
+            MethodCall methodCall = new MethodCall(method, parameters);
+            _sendBuffer.AddLast(methodCall);
+            TReturnValue returnValue;
+            try
+            {
+                returnValue = methodCall.AwaitResponse<TReturnValue>().Result;
+            }
+            catch
+            {
+                _methodCalls.Remove(methodCall);
+                throw;
+            }
+            _methodCalls.Remove(methodCall);
+            return returnValue;
+        }
 
-//            webSocket.Log.Output = (data, error) =>
-//            {
-//                OnError?.Invoke(error);
-//            };
-            
-//            webSocket.OnMessage += (sender, e) => ReceiveMessages(e.Data);
-//            webSocket.OnClose += (sender, e) =>
-//            {
-//                if (connected)
-//                    Log.Error($"Lost connection to {iPAddress}");
-//                connected = false;
-//                Connect();
-//            };
-//            webSocket.OnOpen += (sender, e) =>
-//            {
-//                if (!connected)
-//                    Log.Information($"Connected to {iPAddress}");
-//                connected = true;
-//                if (resetEvent != null)
-//                {
-//                    resetEvent.Set();
-//                }
-//            };
-//            webSocket.OnError += (sender, e) => Log.Error(e.Message);
-//        }
+        public void Call(string method, params object[] parameters)
+        {
+            MethodCall methodCall = new MethodCall(method, parameters);
+            _sendBuffer.AddLast(methodCall);
+            try
+            {
+                methodCall.AwaitResponse().Wait();
+            }
+            catch
+            {
+                _methodCalls.Remove(methodCall);
+                throw;
+            }
+            _methodCalls.Remove(methodCall);
+        }
 
-//        public bool Connect()
-//        {
-//            try
-//            {
-//                CancellationTokenSource cancellationTokenSource = new CancellationTokenSource(2000);
-//                resetEvent = new ManualResetEvent(false);
+        public void Subscribe<T>(string eventName, Action<object> callback)
+        {
+            if (!_broadcastEventSubscriptions.ContainsKey(eventName))
+                _broadcastEventSubscriptions.Add(eventName, new List<Action<JObject>>());
+            _broadcastEventSubscriptions[eventName].Add((JObject value) => {
+                try
+                {
+                    callback?.Invoke(value.ToObject<T>());
+                }
+                catch (Exception e)
+                {
+                    OnError?.Invoke(this, e.ToString());
+                }
+            });
+        }
 
-//                var task = Task.Run(() =>
-//                {
-//                    webSocket.Connect();
-//                }, cancellationTokenSource.Token);
+        public void SubscribeAll(Action<BroadcastMessage> callback)
+        {
+            _allSubscriptions.Add(callback);
+        }
 
-//                while (resetEvent != null && !resetEvent.WaitOne(1) && !cancellationTokenSource.Token.IsCancellationRequested)
-//                {
-//                    Thread.Sleep(1);
-//                }
+        private async void SendCalls()
+        {
+            while (!_cts.IsCancellationRequested)
+            {
+                if (_client.State != WebSocketState.Open)
+                {
+                    OnNotConnectedState();
+                }
+                if (_sendBuffer.Count > 0)
+                {
+                    try
+                    {
+                        MethodCall call;
+                        while ((call = _sendBuffer.First.Value).CancellationTokenSource.IsCancellationRequested)
+                            _sendBuffer.Remove(call);
 
-//                if (cancellationTokenSource.IsCancellationRequested)
-//                    Log.Error($"Connection timed out {IPAddress}");
+                        ArraySegment<byte> sendBuffer = new ArraySegment<byte>(call.JsonRpcMessage.ToJson().Encrypt(Password).GetBytes());
+                        await _client.SendAsync(sendBuffer, WebSocketMessageType.Text, true, _cts.Token);
+                        _methodCalls.Add(call);
+                        _sendBuffer.Remove(call);
+                    }
+                    catch
+                    {
+                        OnNotConnectedState();
+                    }
+                }
+                Thread.Sleep(1);
+            }
+        }
 
-//                cancellationTokenSource.Dispose();
+        private async void RecieveValues()
+        {
+            while (!_cts.IsCancellationRequested)
+            {
+                if (_client.State == WebSocketState.Open)
+                {
+                    try
+                    {
+                        ArraySegment<byte> buffer = new ArraySegment<byte>(new byte[1024]);
+                        await _client.ReceiveAsync(buffer, _cts.Token);
+                        OnReceive(buffer.Array.GetString().Decrypt(Password));
+                    }
+                    catch
+                    {
+                        OnNotConnectedState();
+                    }
+                }
+                else
+                {
+                    OnNotConnectedState();
+                }
+            }
+        }
 
-//                if (resetEvent != null)
-//                    resetEvent.Dispose();
-//                resetEvent = null;
-//            }
-//            catch (Exception e)
-//            {
-//                Log.Error(e, "");
-//                Task.Run(() => Connect());
-//            }
-//            return connected;
-//        }
+        private void OnReceive(string message)
+        {
+            JObject jObject = JObject.Parse(message);
+            string broadcastEventName = jObject.GetValue(nameof(BroadcastMessage.EventName), StringComparison.OrdinalIgnoreCase)?.Value<string>();
+            if (broadcastEventName != null)
+            {
+                if (_broadcastEventSubscriptions.ContainsKey(broadcastEventName))
+                    _broadcastEventSubscriptions[broadcastEventName].ForEach(a => a?.Invoke(jObject[nameof(BroadcastMessage.Data)].Value<JObject>()));
+                if (_allSubscriptions.Count > 0)
+                {
+                    BroadcastMessage broadcastMessage = jObject.ToObject<BroadcastMessage>();
+                    _allSubscriptions.ForEach(s => s?.Invoke(broadcastMessage));
+                }
+            }
+            else
+            {
+                JsonRpcResponse jsonRpcResponse = jObject.ToObject<JsonRpcResponse>();
+                MethodCall call = _methodCalls.ToList().FirstOrDefault(c => c.JsonRpcMessage.Id == jsonRpcResponse.Id);
+                if (jsonRpcResponse.Error.HasValue)
+                {
+                    string methodCallString = call == null ? string.Empty : $" ({call})";
+                    OnError?.Invoke(this, $"Error from server: {jsonRpcResponse.Error.Value.Message}{methodCallString}");
+                    return;
+                }
+                if (call != null)
+                    call.JsonRpcResponse = jsonRpcResponse;
+            }
+        }
 
-//        public async Task<T> Call<T>(string method, params object[] parameters)
-//        {
-//            if (!connected)
-//                throw new Exception($"Not connected {IPAddress}");
-//            CancellationTokenSource cancellationTokenSource = new CancellationTokenSource(5000);
-//            JsonRpcMessage message = new JsonRpcMessage(method, parameters);
-//            Task<JsonRpcResponse> subscription = SubscribeToResponse(message.Id);
-//            webSocket.Send(message.ToJson());
-//            subscription.Wait(cancellationTokenSource.Token);
-//            var result = await subscription;
-//            if (result.Error != null)
-//            {
-//                throw new Exception(result.Error.Value.Message);
-//            }
-//            return (T)Convert.ChangeType(result.Result, typeof(T));
-//        }
+        private void OnNotConnectedState()
+        {
+            lock (_clientLock)
+            {
+                if (!_cts.IsCancellationRequested)
+                {
+                    Connected = _client.State == WebSocketState.Open;
+                    if (!Connected)
+                    {
+                        if (_client != null)
+                            _client.Dispose();
+                        _client = new ClientWebSocket();
+                        Connect();
+                    }
+                }
+            }
+        }
 
-//        public async Task<bool> Call(string method, params object[] parameters)
-//        {
-//            if (!connected)
-//                throw new Exception("Not connected");
-//            JsonRpcMessage message = new JsonRpcMessage(method, parameters);
-//            Task<JsonRpcResponse> subscription = SubscribeToResponse(message.Id);
-//            webSocket.Send(message.ToJson());
-//            var result = await subscription;
-//            if (result.Error != null)
-//            {
-//                throw new Exception(result.Error.Value.Message);
-//            }
-//            return (string)result.Result == "OK";
-//        }
+        private void Connect()
+        {
+            try
+            {
+                _client.ConnectAsync(new Uri($"{UrlScheme}://{IpAddress}:{Port}"), _cts.Token).Wait();
+                _error = false;
+            }
+            catch (Exception e) 
+            {
+                if (!_error)
+                {
+                    OnError?.Invoke(this, e.ToString());
+                    _error = true;
+                }
+                Thread.Sleep(500);
+            }
+            Connected = _client.State == WebSocketState.Open;
+        }
 
-//        private void ReceiveMessages(string message)
-//        {
-//            try
-//            {
-//                if (message.Contains(nameof(BroadcastMessage.EventName)))
-//                {
-//                    BroadcastMessage broadcastMessage = JsonConvert.DeserializeObject<BroadcastMessage>(message);
-//                    OnBroadcastMessage?.Invoke(broadcastMessage);
-//                }
-//                else
-//                {
-//                    JsonRpcResponse response = JsonConvert.DeserializeObject<JsonRpcResponse>(message);
-//                    foreach (Subscription subscription in subscriptions.ToArray())
-//                    {
-//                        if (subscription.Id == response.Id)
-//                        {
-//                            subscriptions.Remove(subscription);
-//                            subscription.response = response;
-//                            subscription.resetEvent.Set();
-//                        }
-//                        if (subscription.CreationDateTime.AddSeconds(5) <= DateTime.UtcNow)
-//                        {
-//                            subscriptions.Remove(subscription);
-//                        }
-//                    }
-//                }                 
-//            }
-//            catch (Exception e) 
-//            {
-//                Log.Error(e, "");
-//            }
-//        }
-
-//        private async Task<JsonRpcResponse> SubscribeToResponse(long id)
-//        {
-//            return await Task.Run(() =>
-//            {
-//                Subscription subscription = new Subscription(id);
-//                subscriptions.Add(subscription);
-//                subscription.resetEvent.WaitOne();
-//                return subscription.response;
-//            });          
-//        }
-//    }
-//}
+        public void Dispose()
+        {
+            if (_cts.IsCancellationRequested)
+                throw new InvalidOperationException("Object already disposed");
+            lock (_clientLock)
+            {
+                if (_client != null)
+                    _client.Dispose();
+                _client = null;
+            }
+            _cts.Cancel();
+            _cts.Dispose();
+        }
+    }
+}
