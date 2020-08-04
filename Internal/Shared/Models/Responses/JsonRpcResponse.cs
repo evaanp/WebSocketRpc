@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace EP94.WebSocketRpc.Internal.Shared.Models.Responses
 {
@@ -17,7 +18,7 @@ namespace EP94.WebSocketRpc.Internal.Shared.Models.Responses
         public JsonRpcError? Error { get; set; } = null;
 
         [JsonProperty("result")]
-        public object Result { get; set; } = null;
+        public JToken Result { get; set; } = null;
 
         public JsonRpcResponse() { }
 
@@ -27,7 +28,7 @@ namespace EP94.WebSocketRpc.Internal.Shared.Models.Responses
             Error = error;
         }
 
-        public JsonRpcResponse(long id, object result)
+        public JsonRpcResponse(long id, JToken result)
         {
             Id = id;
             Result = result;

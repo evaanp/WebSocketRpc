@@ -1,0 +1,9 @@
+C:\Github_Projects\Libraries\WebSocketRpc\WebSocketRpc\bin\Debug\netstandard2.1\WebSocketRpc.deps.json
+C:\Github_Projects\Libraries\WebSocketRpc\WebSocketRpc\bin\Debug\netstandard2.1\WebSocketRpc.dll
+C:\Github_Projects\Libraries\WebSocketRpc\WebSocketRpc\bin\Debug\netstandard2.1\WebSocketRpc.pdb
+C:\Github_Projects\Libraries\WebSocketRpc\WebSocketRpc\obj\Debug\netstandard2.1\WebSocketRpc.csprojAssemblyReference.cache
+C:\Github_Projects\Libraries\WebSocketRpc\WebSocketRpc\obj\Debug\netstandard2.1\WebSocketRpc.AssemblyInfoInputs.cache
+C:\Github_Projects\Libraries\WebSocketRpc\WebSocketRpc\obj\Debug\netstandard2.1\WebSocketRpc.AssemblyInfo.cs
+C:\Github_Projects\Libraries\WebSocketRpc\WebSocketRpc\obj\Debug\netstandard2.1\WebSocketRpc.csproj.CoreCompileInputs.cache
+C:\Github_Projects\Libraries\WebSocketRpc\WebSocketRpc\obj\Debug\netstandard2.1\WebSocketRpc.dll
+C:\Github_Projects\Libraries\WebSocketRpc\WebSocketRpc\obj\Debug\netstandard2.1\WebSocketRpc.pdb

@@ -13,13 +13,13 @@ namespace EP94.WebSocketRpc.Internal.Shared.Models
         [JsonProperty("method")]
         public string Method { get; set; }
         [JsonProperty("params")]
-        public object[] Params { get; set; }
+        public JToken[] Params { get; set; }
         [JsonProperty("id")]
         public long Id { get; set; }
         private static long _id;
 
         public JsonRpcMessage() { }
-        public JsonRpcMessage(string method, params object[] parameters)
+        public JsonRpcMessage(string method, params JToken[] parameters)
         {
             Method = method;
             Params = parameters;

@@ -31,7 +31,7 @@ namespace EP94.WebSocketRpc.Internal.Shared.Models
                 message = JsonConvert.DeserializeObject<JsonRpcMessage>(e.Data);
                 try
                 {
-                    response = new JsonRpcResponse(message.Id, TryCallMethod(message).Result).ToJson();
+                    //response = new JsonRpcResponse(message.Id, TryCallMethod(message).Result).ToJson();
                 }
                 catch (AggregateException ex)
                 {
@@ -121,7 +121,7 @@ namespace EP94.WebSocketRpc.Internal.Shared.Models
 
             for (int i = 0; i < parameterInfos.Length; i++)
             {
-                message.Params[i] = Convert.ChangeType(message.Params[i], parameterInfos[i].ParameterType);
+                //message.Params[i] = Convert.ChangeType(message.Params[i], parameterInfos[i].ParameterType);
             }
             return true;
         }
