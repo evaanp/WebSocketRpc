@@ -17,7 +17,7 @@ using System.Threading.Tasks;
 
 namespace EP94.WebSocketRpc.Internal.WebSocketRpcServer.Models
 {
-    internal class WebSocketSession
+    internal class WebSocketSession : IDisposable
     {
         public bool Open { get; set; } = true;
         public JsonRpcResponse JsonRpcResponse { get; private set; }
@@ -27,6 +27,8 @@ namespace EP94.WebSocketRpc.Internal.WebSocketRpcServer.Models
         private WebSocket _socket;
         private Public.WebSocketRpcServer _server;
         private CancellationTokenSource _cts = new CancellationTokenSource();
+        private object _disposeLock = new object();
+        private bool _disposed = false;
         public WebSocketSession(WebSocket socket, Public.WebSocketRpcServer server)
         {
             _socket = socket;
@@ -37,7 +39,14 @@ namespace EP94.WebSocketRpc.Internal.WebSocketRpcServer.Models
 
         public async void Send(string message)
         {
-            await _socket.SendAsync(message.GetBytes(), WebSocketMessageType.Text, true, _cts.Token);
+            try
+            {
+                await _socket.SendAsync(message.GetBytes(), WebSocketMessageType.Text, true, _cts.Token);
+            }
+            catch
+            {
+                Dispose();
+            }
         }
 
         private async void ReceiveMessages()
@@ -53,10 +62,7 @@ namespace EP94.WebSocketRpc.Internal.WebSocketRpcServer.Models
                 }
             }
             catch { }
-            _cts.Cancel();
-            //await _socket.CloseAsync(WebSocketCloseStatus.Empty, "", _cts.Token);
-            _socket.Dispose();
-            Open = false;
+            Dispose();
             OnClose?.Invoke(this, new EventArgs());
         }
 
@@ -146,12 +152,25 @@ namespace EP94.WebSocketRpc.Internal.WebSocketRpcServer.Models
             if (parameterInfos.Length != message.Params.Length)
                 return false;
 
-
             for (int i = 0; i < parameterInfos.Length; i++)
             {
                 parameters[i] =  message.Params[i].ToObject(parameterInfos[i].ParameterType);
             }
             return true;
+        }
+
+        public void Dispose()
+        {
+            lock (_disposeLock)
+            {
+                if (!_disposed)
+                {
+                    _cts.Cancel();
+                    _disposed = true;
+                    _socket.Dispose();
+                    Open = false;
+                }
+            }
         }
     }
 }

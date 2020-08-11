@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "QCUeT58KmQOZ/NFAl22+72ffDDdSm1ApkGouvZ2p+0R6SWQyUjTDYVqbEEVmF8+G3gY2HhSN/TWGkMA8tm1Blw==",
+  "dgSpecHash": "iZmKZPTVqhPz8yJVJTSe8L7ZD44HEhBGQKolF/YWFGzmz0N9D4JNkEUBbis4x9h9ieQvjnzSm7/D3EJvBrzZkg==",
   "success": true,
   "projectFilePath": "C:\\Github_Projects\\Libraries\\WebsocketRpc\\WebSocketRpc\\WebSocketRpc.csproj",
   "expectedPackageFiles": [

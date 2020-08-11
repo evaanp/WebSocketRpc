@@ -38,11 +38,7 @@ namespace EP94.WebSocketRpc.Public
         {
             foreach (var session in _sessions.Where(s => s.Open).ToList())
             {
-                try
-                {
-                    session.Send(JsonConvert.SerializeObject(new BroadcastMessage() { EventName = eventName, Data = data }));
-                }
-                catch { }
+                session.Send(JsonConvert.SerializeObject(new BroadcastMessage() { EventName = eventName, Data = data }));
             }
         }
 

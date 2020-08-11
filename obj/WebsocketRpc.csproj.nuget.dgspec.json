@@ -5,7 +5,7 @@
   },
   "projects": {
     "C:\\Github_Projects\\Libraries\\WebsocketRpc\\WebSocketRpc\\WebSocketRpc.csproj": {
-      "version": "1.0.17",
+      "version": "1.0.18",
       "restore": {
         "projectUniqueName": "C:\\Github_Projects\\Libraries\\WebsocketRpc\\WebSocketRpc\\WebSocketRpc.csproj",
         "projectName": "WebSocketRpc",
