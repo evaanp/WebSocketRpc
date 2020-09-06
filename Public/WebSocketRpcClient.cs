@@ -138,8 +138,8 @@ namespace EP94.WebSocketRpc.Public
                         MethodCall call;
                         while ((call = _sendBuffer.First.Value).CancellationTokenSource.IsCancellationRequested)
                             _sendBuffer.Remove(call);
-
-                        ArraySegment<byte> sendBuffer = new ArraySegment<byte>(call.JsonRpcMessage.ToJson().Encrypt(Password).GetBytes());
+                        byte[] bytes = string.IsNullOrEmpty(Password) ? call.JsonRpcMessage.ToJson().GetBytes() : call.JsonRpcMessage.ToJson().Encrypt(Password).GetBytes();
+                        ArraySegment<byte> sendBuffer = new ArraySegment<byte>(bytes);
                         await _client.SendAsync(sendBuffer, WebSocketMessageType.Text, true, _cts.Token);
                         _methodCalls.Add(call);
                         _sendBuffer.Remove(call);
@@ -163,7 +163,8 @@ namespace EP94.WebSocketRpc.Public
                     {
                         ArraySegment<byte> buffer = new ArraySegment<byte>(new byte[1024]);
                         await _client.ReceiveAsync(buffer, _cts.Token);
-                        OnReceive(buffer.Array.GetString().Decrypt(Password));
+                        string msg = string.IsNullOrEmpty(Password) ? buffer.Array.GetString() : buffer.Array.GetString().Decrypt(Password);
+                        OnReceive(msg);
                     }
                     catch
                     {

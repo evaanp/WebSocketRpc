@@ -29,16 +29,19 @@ namespace EP94.WebSocketRpc.Internal.WebSocketRpcServer.Models
         private CancellationTokenSource _cts = new CancellationTokenSource();
         private object _disposeLock = new object();
         private bool _disposed = false;
-        public WebSocketSession(WebSocket socket, Public.WebSocketRpcServer server)
+        private string _password;
+        public WebSocketSession(WebSocket socket, Public.WebSocketRpcServer server, string password)
         {
             _socket = socket;
             _server = server;
+            _password = password;
             _thread = new Thread(() => ReceiveMessages());
             _thread.Start();
         }
 
         public async void Send(string message)
         {
+            message = !string.IsNullOrEmpty(_password) ? message.Encrypt(_password) : message;
             try
             {
                 await _socket.SendAsync(message.GetBytes(), WebSocketMessageType.Text, true, _cts.Token);
@@ -57,7 +60,9 @@ namespace EP94.WebSocketRpc.Internal.WebSocketRpcServer.Models
                 {
                     ArraySegment<byte> buffer = new ArraySegment<byte>(new byte[1024]);
                     await _socket.ReceiveAsync(buffer, _cts.Token);
-                    JsonRpcResponse response = ReceiveMessage(buffer.Array.GetString());
+                    string msg = buffer.Array.GetString();
+                    Console.WriteLine(!string.IsNullOrEmpty(_password) ? msg.Decrypt(_password) : msg);
+                    JsonRpcResponse response = ReceiveMessage(!string.IsNullOrEmpty(_password) ? msg.Decrypt(_password) : msg);
                     Send(response.ToJson());
                 }
             }
@@ -68,6 +73,7 @@ namespace EP94.WebSocketRpc.Internal.WebSocketRpcServer.Models
 
         private JsonRpcResponse ReceiveMessage(string message)
         {
+            Console.WriteLine(message);
             JsonRpcResponse response;
             long messageId = 0;
             try

@@ -1,0 +1,20 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2012/06/nuspec.xsd">
+  <metadata>
+    <id>WebSocketRpc</id>
+    <version>1.1.2</version>
+    <authors>WebSocketRpc</authors>
+    <owners>WebSocketRpc</owners>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>Package Description</description>
+    <dependencies>
+      <group targetFramework=".NETStandard2.1">
+        <dependency id="Microsoft.CSharp" version="4.7.0" exclude="Build,Analyzers" />
+        <dependency id="Newtonsoft.Json" version="12.0.3" exclude="Build,Analyzers" />
+      </group>
+    </dependencies>
+  </metadata>
+  <files>
+    <file src="C:\Github_Projects\Libraries\WebsocketRpc\WebSocketRpc\bin\Release\netstandard2.1\WebSocketRpc.dll" target="lib\netstandard2.1\WebSocketRpc.dll" />
+  </files>
+</package>
