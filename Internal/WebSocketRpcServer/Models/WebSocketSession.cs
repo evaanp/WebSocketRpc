@@ -8,6 +8,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Sockets;
 using System.Net.WebSockets;
 using System.Reflection;
@@ -61,7 +62,6 @@ namespace EP94.WebSocketRpc.Internal.WebSocketRpcServer.Models
                     ArraySegment<byte> buffer = new ArraySegment<byte>(new byte[1024]);
                     await _socket.ReceiveAsync(buffer, _cts.Token);
                     string msg = buffer.Array.GetString();
-                    Console.WriteLine(!string.IsNullOrEmpty(_password) ? msg.Decrypt(_password) : msg);
                     JsonRpcResponse response = ReceiveMessage(!string.IsNullOrEmpty(_password) ? msg.Decrypt(_password) : msg);
                     Send(response.ToJson());
                 }
@@ -73,7 +73,6 @@ namespace EP94.WebSocketRpc.Internal.WebSocketRpcServer.Models
 
         private JsonRpcResponse ReceiveMessage(string message)
         {
-            Console.WriteLine(message);
             JsonRpcResponse response;
             long messageId = 0;
             try
@@ -91,6 +90,7 @@ namespace EP94.WebSocketRpc.Internal.WebSocketRpcServer.Models
             }
             catch (Exception e)
             {
+                Console.WriteLine(e);
                 response = e switch
                 {
                     JsonSerializationException _ => new JsonRpcResponse(messageId, JsonRpcErrors.ParseError),
@@ -106,15 +106,30 @@ namespace EP94.WebSocketRpc.Internal.WebSocketRpcServer.Models
         private async Task<JToken> TryCallMethod(JsonRpcMessage message)
         {
             Type type = _server.GetType();
-            MethodInfo methodInfo = type.GetMethod(message.Method);
+
+            IEnumerable<MethodInfo> methodInfos = type.GetMethods().Where(m => m.Name == message.Method);
+
+            int count = methodInfos.Count();
+
+            if (count == 0)
+                throw new MethodNotFoundException(message.Method);
+
+            MethodInfo methodInfo = count > 1 ? methodInfos.Where(m => m.GetParameters().Length == message.Params.Length).FirstOrDefault() : methodInfos.FirstOrDefault();
 
             if (methodInfo == null)
-                throw new MethodNotFoundException(message.Method);
+                throw new InvalidParametersException("");
 
             try
             {
-                if (!TryConvertParameters(message, methodInfo, out object[] parameters))
+                object[] parameters;
+                try
+                {
+                    TryConvertParameters(message, methodInfo, out parameters);
+                }
+                catch (Exception)
+                {
                     throw new InvalidParametersException("");
+                }
 
                 bool isAwaitable = methodInfo.ReturnType.GetMethod(nameof(Task.GetAwaiter)) != null;
 
@@ -150,19 +165,15 @@ namespace EP94.WebSocketRpc.Internal.WebSocketRpcServer.Models
             }
         }
 
-        private bool TryConvertParameters(JsonRpcMessage message, MethodInfo methodInfo, out object[] parameters)
+        private void TryConvertParameters(JsonRpcMessage message, MethodInfo methodInfo, out object[] parameters)
         {
             ParameterInfo[] parameterInfos = methodInfo.GetParameters();
-           parameters = new object[parameterInfos.Length];
-
-            if (parameterInfos.Length != message.Params.Length)
-                return false;
+            parameters = new object[parameterInfos.Length];
 
             for (int i = 0; i < parameterInfos.Length; i++)
             {
                 parameters[i] =  message.Params[i].ToObject(parameterInfos[i].ParameterType);
             }
-            return true;
         }
 
         public void Dispose()

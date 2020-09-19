@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "fwIBg6IfeGCAMEfZS9chiAVx9fjUxy/QulqZ+xboNty+N0THmxPbhcshaNbJkpTMa6H+oo45ReLu8+DNTyjyJw==",
+  "dgSpecHash": "ocTzzN3I6rPJSWo5u0RKRMuQ3IZDRS5pU9kTYwb68kPxkQLsOz+TcMIK7DwkkLNOrH4sz3qpE96pyTZvWE3ACQ==",
   "success": true,
-  "projectFilePath": "C:\\Github_Projects\\Libraries\\WebsocketRpc\\WebSocketRpc\\WebSocketRpc.csproj",
+  "projectFilePath": "C:\\Github_Projects\\Libraries\\WebSocketRpc\\WebSocketRpc\\WebSocketRpc.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\HP\\.nuget\\packages\\microsoft.csharp\\4.7.0\\microsoft.csharp.4.7.0.nupkg.sha512",
     "C:\\Users\\HP\\.nuget\\packages\\newtonsoft.json\\12.0.3\\newtonsoft.json.12.0.3.nupkg.sha512"
