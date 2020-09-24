@@ -90,7 +90,6 @@ namespace EP94.WebSocketRpc.Internal.WebSocketRpcServer.Models
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
                 response = e switch
                 {
                     JsonSerializationException _ => new JsonRpcResponse(messageId, JsonRpcErrors.ParseError),
@@ -139,6 +138,7 @@ namespace EP94.WebSocketRpc.Internal.WebSocketRpcServer.Models
                     if (methodInfo.ReturnType.IsGenericType)
                     {
                         result = (object)await (dynamic)methodInfo.Invoke(_server, parameters);
+                        return null;
                     }
                     else
                     {
@@ -150,6 +150,7 @@ namespace EP94.WebSocketRpc.Internal.WebSocketRpcServer.Models
                     if (methodInfo.ReturnType == typeof(void))
                     {
                         methodInfo.Invoke(_server, parameters);
+                        return null;
                     }
                     else
                     {

@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Github_Projects\\Libraries\\WebSocketRpc\\WebSocketRpc\\WebSocketRpc.csproj": {}
+    "C:\\Github_Projects\\Libraries\\WebsocketRpc\\WebSocketRpc\\WebSocketRpc.csproj": {}
   },
   "projects": {
-    "C:\\Github_Projects\\Libraries\\WebSocketRpc\\WebSocketRpc\\WebSocketRpc.csproj": {
-      "version": "1.1.4",
+    "C:\\Github_Projects\\Libraries\\WebsocketRpc\\WebSocketRpc\\WebSocketRpc.csproj": {
+      "version": "1.1.6",
       "restore": {
-        "projectUniqueName": "C:\\Github_Projects\\Libraries\\WebSocketRpc\\WebSocketRpc\\WebSocketRpc.csproj",
+        "projectUniqueName": "C:\\Github_Projects\\Libraries\\WebsocketRpc\\WebSocketRpc\\WebSocketRpc.csproj",
         "projectName": "WebSocketRpc",
-        "projectPath": "C:\\Github_Projects\\Libraries\\WebSocketRpc\\WebSocketRpc\\WebSocketRpc.csproj",
+        "projectPath": "C:\\Github_Projects\\Libraries\\WebsocketRpc\\WebSocketRpc\\WebSocketRpc.csproj",
         "packagesPath": "C:\\Users\\HP\\.nuget\\packages\\",
-        "outputPath": "C:\\Github_Projects\\Libraries\\WebSocketRpc\\WebSocketRpc\\obj\\",
+        "outputPath": "C:\\Github_Projects\\Libraries\\WebsocketRpc\\WebSocketRpc\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Microsoft\\Xamarin\\NuGet\\",
